@@ -1,28 +1,45 @@
-//const express = require('express')
-//const oracledb = require('oracledb');
 
 import express from 'express';
 import oracledb from 'oracledb';
-import {selectAllEmployees, selectEmployeesById} from './scripts/book.js'
+import {selectBooksById, selectAllBooks, deleteBookByID, updateBook, insertBook} from './scripts/book.js'
 
 const app = express();
 const port = 3000;
 
-//get /employess
-app.get('/employees', function (req, res) {
-  selectAllEmployees(req, res);
+//get /getAllBooks
+app.get('/getAllBooks', function (req, res) {
+  selectAllBooks(req, res);
 })
 
-//get /employee?id=<id employee>
-app.get('/employee', function (req, res) {
+//get /book?id=<id book>
+app.get('/book', function (req, res) {
   //get query param ?id
   let id = req.query.id;
   // id param if it is number
   if (isNaN(id)) {
+    console.log(id);
     res.send('Query param id is not number')
     return
   }
-  selectEmployeesById(req, res, id);
+  selectBooksById(req, res, id);
 })
+
+//delete single data 
+app.delete('/book/:id', (req,res)=>{
+  deleteBookByID(req, res);
+});
+
+//update single data
+app.put('/book/:id', (req,res)=>{
+  console.log(req.body,'updatedata');
+  updateBook(req, res);
+});
+
+// insertion
+app.post('/book', (req,res)=>{
+  console.log(req.body,'createData'); 
+  insertBook(req, res);
+});
+
 
 app.listen(port, () => console.log("nodeOracleRestApi app listening on port %s!", port))
