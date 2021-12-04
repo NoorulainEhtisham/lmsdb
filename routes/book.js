@@ -1,8 +1,9 @@
-import express from 'express';
-import oracledb from 'oracledb';
+// import express from 'express';
+// import oracledb from 'oracledb';
+const express = require('express');
+const oracledb = require('oracledb');
 
 const app = express();
-const port = 4000;
 
 const connectionString = {
   user: "hr",
@@ -10,15 +11,70 @@ const connectionString = {
   connectString: "localhost:1521/orclpdb"
 }
 
+let connection = undefined, result = undefined;
 
-export async function selectAllBooks(req, res) {
+//get /getAllBooks
+app.get('/getAllBooks', function (req, res) {
+  selectAllBooks(req, res);
+})
+
+//get /book?id=<id book>
+app.get('/book', function (req, res) {
+  //get query param ?id
+  let id = req.query.id;
+  // id param if it is number
+  if (isNaN(id)) {
+    console.log(id);
+    res.send('Query param id is not number')
+    return
+  }
+  selectBooksById(req, res, id);
+})
+
+//delete single data 
+app.delete('/book/:id', (req,res)=>{
+  deleteBookByID(req, res);
+});
+
+//update single data
+app.put('/book/:id', (req,res)=>{
+  console.log(req.body,'updatedata');
+  updateBook(req, res);
+});
+
+// insertion
+app.post('/book', (req,res)=>{
+  console.log(req.body,'createData'); 
+  insertBook(req, res);
+});
+
+
+async function selectAllBooks(req, res) {
 
     try {
+
+      console.log('connected to database');
       connection = await oracledb.getConnection(connectionString);
   
-      console.log('connected to database');
+      
       // run query to get all books
       result = await connection.execute(`SELECT * FROM Books`);
+
+      if (result?.rows?.length == 0) {
+        //query return zero books
+        //return res.send('query send no rows');
+        return res.status(400).json({
+          status: 'error',
+          error: 'query send no rows',
+        });
+      } else {
+        //send all books
+        //return res.send(result?.rows);
+        return res.status(200).json({
+          status: 'succes',
+          data: result?.rows
+        });
+      }
   
     } catch (err) {
       //send error message
@@ -33,18 +89,11 @@ export async function selectAllBooks(req, res) {
           console.error(err.message);
         }
       }
-      if (result.rows.length == 0) {
-        //query return zero books
-        return res.send('query send no rows');
-      } else {
-        //send all books
-        return res.send(result.rows);
-      }
-  
+
     }
 }
   
-export  async function selectBooksById(req, res, id) {
+async function selectBooksById(req, res, id) {
     try {
       connection = await oracledb.getConnection(connectionString);
       // run query to get book with book_id
@@ -72,7 +121,7 @@ export  async function selectBooksById(req, res, id) {
     }
 }
 
-export async function deleteBookByID ( req, res) {
+async function deleteBookByID ( req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
     
@@ -102,7 +151,7 @@ export async function deleteBookByID ( req, res) {
   }
 }
 
-export async function updateBook ( req, res) {
+async function updateBook ( req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
     
@@ -140,7 +189,7 @@ export async function updateBook ( req, res) {
   }
 }
 
-export async function insertBook ( req, res) {
+async function insertBook ( req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
     
@@ -175,3 +224,6 @@ export async function insertBook ( req, res) {
     }
   }
 }
+
+
+module.exports = app;

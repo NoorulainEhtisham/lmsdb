@@ -1,45 +1,30 @@
+// import express from 'express';
+const express = require('express');
+const oracledb = require('oracledb');
+const bodyParser = require('body-parser');
 
-import express from 'express';
-import oracledb from 'oracledb';
-import {selectBooksById, selectAllBooks, deleteBookByID, updateBook, insertBook} from './scripts/book.js'
+const bookRoutes = require('./routes/book');
+const authorRoutes = require('./routes/author');
+// import bookRoutes from './routes/book.js';
+// import authorRoutes from './routes/author.js';
+
+// const connectionString = {
+//   user: "hr",
+//   password: "hr",
+//   connectString: "localhost:1521/orclpdb"
+// }
+// connection = await oracledb.getConnection(connectionString);
 
 const app = express();
-const port = 3000;
 
-//get /getAllBooks
-app.get('/getAllBooks', function (req, res) {
-  selectAllBooks(req, res);
-})
+app.use(bodyParser.json());
+app.use("/book", bookRoutes);
+app.use("/author", authorRoutes);
 
-//get /book?id=<id book>
-app.get('/book', function (req, res) {
-  //get query param ?id
-  let id = req.query.id;
-  // id param if it is number
-  if (isNaN(id)) {
-    console.log(id);
-    res.send('Query param id is not number')
-    return
-  }
-  selectBooksById(req, res, id);
-})
+const PORT = process.env.PORT || 4000;
 
-//delete single data 
-app.delete('/book/:id', (req,res)=>{
-  deleteBookByID(req, res);
+app.listen(PORT, function(){
+    console.log("Node Server is Running on ", PORT);
 });
 
-//update single data
-app.put('/book/:id', (req,res)=>{
-  console.log(req.body,'updatedata');
-  updateBook(req, res);
-});
-
-// insertion
-app.post('/book', (req,res)=>{
-  console.log(req.body,'createData'); 
-  insertBook(req, res);
-});
-
-
-app.listen(port, () => console.log("nodeOracleRestApi app listening on port %s!", port))
+module.exports = app;
