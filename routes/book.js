@@ -2,6 +2,8 @@
 // import oracledb from 'oracledb';
 const express = require('express');
 const oracledb = require('oracledb');
+const arrayToJSON = require('../util')
+
 
 const app = express();
 
@@ -14,12 +16,12 @@ const connectionString = {
 let connection = undefined, result = undefined;
 
 //get /getAllBooks
-app.get('/getAllBooks', function (req, res) {
+app.get('/getAll', function (req, res) {
   selectAllBooks(req, res);
 })
 
 //get /book?id=<id book>
-app.get('/book', function (req, res) {
+app.get('/getbyid', function (req, res) {
   //get query param ?id
   let id = req.query.id;
   // id param if it is number
@@ -32,18 +34,18 @@ app.get('/book', function (req, res) {
 })
 
 //delete single data 
-app.delete('/book/:id', (req,res)=>{
+app.delete('/deletebyid/:id', (req,res)=>{
   deleteBookByID(req, res);
 });
 
 //update single data
-app.put('/book/:id', (req,res)=>{
+app.put('/updatebyid/:id', (req,res)=>{
   console.log(req.body,'updatedata');
   updateBook(req, res);
 });
 
 // insertion
-app.post('/book', (req,res)=>{
+app.post('/insert', (req,res)=>{
   console.log(req.body,'createData'); 
   insertBook(req, res);
 });
@@ -60,20 +62,20 @@ async function selectAllBooks(req, res) {
       // run query to get all books
       result = await connection.execute(`SELECT * FROM Books`);
 
+      // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
+      // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
+
       if (result?.rows?.length == 0) {
         //query return zero books
-        //return res.send('query send no rows');
-        return res.status(400).json({
-          status: 'error',
-          error: 'query send no rows',
-        });
+        return res.send('no rows found');
       } else {
         //send all books
-        //return res.send(result?.rows);
-        return res.status(200).json({
-          status: 'succes',
-          data: result?.rows
-        });
+       
+        const columns = result.metaData.map((col) => col.name);
+        const data = result.rows;
+        const finalArray = arrayToJSON(columns, data);
+
+        return res.send(finalArray);
       }
   
     } catch (err) {
@@ -98,6 +100,19 @@ async function selectBooksById(req, res, id) {
       connection = await oracledb.getConnection(connectionString);
       // run query to get book with book_id
       result = await connection.execute(`SELECT * FROM books where book_id=:id`, [id]);
+
+      if (result.rows.length == 0) {
+        //query return zero books
+        return res.send('query send no rows');
+      } else {
+        const columns = result.metaData.map((col) => col.name);
+        const data = result.rows;
+        const finalArray = arrayToJSON(columns, data);
+
+        return res.send(finalArray[0]);
+        //send all books
+        //return res.send(result.rows);
+      }
   
     } catch (err) {
       //send error message
@@ -111,13 +126,7 @@ async function selectBooksById(req, res, id) {
           return console.error(err.message);
         }
       }
-      if (result.rows.length == 0) {
-        //query return zero books
-        return res.send('query send no rows');
-      } else {
-        //send all books
-        return res.send(result.rows);
-      }
+     
     }
 }
 
@@ -128,6 +137,14 @@ async function deleteBookByID ( req, res) {
     const book_ID=req.params.id;
 
     result = await connection.execute(`delete from books where book_id='${book_ID}'`);
+
+    if (result.rows.length == 0) {
+      //query return zero books
+      return res.send('query send no rows');
+    } else {
+      //send all books
+      return res.send(result.rows);
+    }
 
   } catch (err) {
     //send error message
@@ -141,13 +158,7 @@ async function deleteBookByID ( req, res) {
         return console.error(err.message);
       }
     }
-    if (result.rows.length == 0) {
-      //query return zero books
-      return res.send('query send no rows');
-    } else {
-      //send all books
-      return res.send(result.rows);
-    }
+   
   }
 }
 
@@ -167,6 +178,14 @@ async function updateBook ( req, res) {
     result = await connection.execute(`update books set title='${title}',publisher_id='${publisher_id}',date_of_publish='${date_of_publish}',description='${description}',cost='${cost}',ISBN='${ISBN}'
     where book_id = ${book_ID}`);
 
+    if (result.rows.length == 0) {
+      //query return zero books
+      return res.send('query send no rows');
+    } else {
+      //send all books
+      return res.send(result.rows);
+    }
+
   } catch (err) {
     //send error message
     return res.send(err.message);
@@ -179,13 +198,7 @@ async function updateBook ( req, res) {
         return console.error(err.message);
       }
     }
-    if (result.rows.length == 0) {
-      //query return zero books
-      return res.send('query send no rows');
-    } else {
-      //send all books
-      return res.send(result.rows);
-    }
+    
   }
 }
 
@@ -202,6 +215,13 @@ async function insertBook ( req, res) {
     const ISBN= req.body.ISBN;
 
     result = await connection.execute(`insert into books(book_id,title,publisher_id,date_of_publish,description,cost,isbn) values('${book_ID}','${title}','${publisher_id}','${date_of_publish}','${description}','${cost}','${ISBN}')`);
+    if (result.rows.length == 0) {
+      //query return zero books
+      return res.send('query send no rows');
+    } else {
+      //send all books
+      return res.send(result.rows);
+    }
 
   } catch (err) {
     //send error message
@@ -215,13 +235,7 @@ async function insertBook ( req, res) {
         return console.error(err.message);
       }
     }
-    if (result.rows.length == 0) {
-      //query return zero books
-      return res.send('query send no rows');
-    } else {
-      //send all books
-      return res.send(result.rows);
-    }
+    
   }
 }
 
