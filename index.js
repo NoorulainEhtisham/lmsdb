@@ -6,6 +6,7 @@ const cors = require("cors");
 
 const bookRoutes = require('./routes/book');
 const authorRoutes = require('./routes/author');
+const issuereturnRoutes = require('./routes/issuereturn');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(cors(corsOptions))
 
 app.use("/book", bookRoutes);
 app.use("/author", authorRoutes);
+app.use("/issuereturn", issuereturnRoutes);
 
 const PORT = process.env.PORT || 4000;
 
