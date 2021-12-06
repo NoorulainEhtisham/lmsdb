@@ -2,7 +2,9 @@
 // import oracledb from 'oracledb';
 const express = require('express');
 const oracledb = require('oracledb');
-const arrayToJSON = require('../util')
+const arrayToJSON = require('../util');
+
+oracledb.autoCommit = true;
 
 
 const app = express();
@@ -34,110 +36,110 @@ app.get('/getbyid', function (req, res) {
 })
 
 //delete single data 
-app.delete('/deletebyid/:id', (req,res)=>{
+app.delete('/deletebyid/:id', (req, res) => {
   deleteBookByID(req, res);
 });
 
 //update single data
-app.put('/updatebyid/:id', (req,res)=>{
-  console.log(req.body,'updatedata');
+app.put('/updatebyid/:id', (req, res) => {
+  console.log(req.body, 'updatedata');
   updateBook(req, res);
 });
 
 // insertion
-app.post('/insert', (req,res)=>{
-  console.log(req.body,'createData'); 
+app.post('/insert', (req, res) => {
+  console.log(req.body, 'createData');
   insertBook(req, res);
 });
 
 
 async function selectAllBooks(req, res) {
 
-    try {
+  try {
 
-      console.log('connected to database');
-      connection = await oracledb.getConnection(connectionString);
-  
-      
-      // run query to get all books
-      result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories from books`);
+    console.log('connected to database');
+    connection = await oracledb.getConnection(connectionString);
 
-      // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
-      // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
 
-      if (result?.rows?.length == 0) {
-        //query return zero books
-        return res.send('no rows found');
-      } else {
-        //send all books
-       
-        const columns = result.metaData.map((col) => col.name);
-        const data = result.rows;
-        const finalArray = arrayToJSON(columns, data);
+    // run query to get all books
+    result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories from books`);
 
-        return res.send(finalArray);
-      }
-  
-    } catch (err) {
-      //send error message
-      return res.send(err.message);
-    } finally {
-      if (connection) {
-        try {
-          // Always close connections
-          await connection.close();
-          console.log('close connection success');
-        } catch (err) {
-          console.error(err.message);
-        }
-      }
+    // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
+    // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
 
+    if (result?.rows?.length == 0) {
+      //query return zero books
+      return res.send('no rows found');
+    } else {
+      //send all books
+
+      const columns = result.metaData.map((col) => col.name);
+      const data = result.rows;
+      const finalArray = arrayToJSON(columns, data);
+
+      return res.send(finalArray);
     }
+
+  } catch (err) {
+    //send error message
+    return res.send(err.message);
+  } finally {
+    if (connection) {
+      try {
+        // Always close connections
+        await connection.close();
+        console.log('close connection success');
+      } catch (err) {
+        console.error(err.message);
+      }
+    }
+
+  }
 }
-  
+
 async function selectBooksById(req, res, id) {
-    try {
-      connection = await oracledb.getConnection(connectionString);
-      // run query to get book with book_id
-      //result = await connection.execute(`SELECT * FROM books where book_id=:id`, [id]);
-       //result = await connection.execute(`select book_Title(${id}) as Title, book_Authors(${id}) as Authors, book_Categories(${id})as Categories from dual`);
-      result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
-, date_of_publish, description, cost, ISBN from books where book_id=${id}`);
-      // console.log(result);
-      if (result.rows.length == 0) {
-        //query return zero books
-        return res.send('query send no rows');
-      } else {
-        const columns = result.metaData.map((col) => col.name);
-        const data = result.rows;
-        const finalArray = arrayToJSON(columns, data);
-
-        return res.send(finalArray[0]);
-        //send all books
-        //return res.send(result.rows);
-      }
-  
-    } catch (err) {
-      //send error message
-      return res.send(err.message);
-    } finally {
-      if (connection) {
-        try {
-          // Always close connections
-          await connection.close(); 
-        } catch (err) {
-          return console.error(err.message);
-        }
-      }
-     
-    }
-}
-
-async function deleteBookByID ( req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
-    
-    const book_ID=req.params.id;
+    // run query to get book with book_id
+    //result = await connection.execute(`SELECT * FROM books where book_id=:id`, [id]);
+    //result = await connection.execute(`select book_Title(${id}) as Title, book_Authors(${id}) as Authors, book_Categories(${id})as Categories from dual`);
+    result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
+    , date_of_publish, description, cost, ISBN, book_copies(book_id) as AvailableCopies from books where book_id=${id}`);
+    // console.log(result);
+    if (result.rows.length == 0) {
+      //query return zero books
+      return res.send('query send no rows');
+    } else {
+      const columns = result.metaData.map((col) => col.name);
+      const data = result.rows;
+      const finalArray = arrayToJSON(columns, data);
+
+      return res.send(finalArray[0]);
+      //send all books
+      //return res.send(result.rows);
+    }
+
+  } catch (err) {
+    //send error message
+    return res.send(err.message);
+  } finally {
+    if (connection) {
+      try {
+        // Always close connections
+        await connection.close();
+      } catch (err) {
+        return console.error(err.message);
+      }
+    }
+
+  }
+}
+
+async function deleteBookByID(req, res) {
+  try {
+    connection = await oracledb.getConnection(connectionString);
+
+    const book_ID = req.params.id;
 
     result = await connection.execute(`delete from books where book_id='${book_ID}'`);
 
@@ -156,26 +158,26 @@ async function deleteBookByID ( req, res) {
     if (connection) {
       try {
         // Always close connections
-        await connection.close(); 
+        await connection.close();
       } catch (err) {
         return console.error(err.message);
       }
     }
-   
+
   }
 }
 
-async function updateBook ( req, res) {
+async function updateBook(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
-    
-    const book_ID=req.params.book_id;
-    const title= req.body.title;
-    const publisher_id= req.body.publisher_id;
-    const date_of_publish= req.body.Date_of_publish;
-    const description= req.body.Description;
-    const cost= req.body.cost;
-    const ISBN= req.body.ISBN;
+
+    const book_ID = req.params.book_id;
+    const title = req.body.title;
+    const publisher_id = req.body.publisher_id;
+    const date_of_publish = req.body.Date_of_publish;
+    const description = req.body.Description;
+    const cost = req.body.cost;
+    const ISBN = req.body.ISBN;
 
 
     result = await connection.execute(`update books set title='${title}',publisher_id='${publisher_id}',date_of_publish='${date_of_publish}',description='${description}',cost='${cost}',ISBN='${ISBN}'
@@ -196,26 +198,26 @@ async function updateBook ( req, res) {
     if (connection) {
       try {
         // Always close connections
-        await connection.close(); 
+        await connection.close();
       } catch (err) {
         return console.error(err.message);
       }
     }
-    
+
   }
 }
 
-async function insertBook ( req, res) {
+async function insertBook(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
-    
-    const book_ID=req.params.book_id;
-    const title= req.body.title;
-    const publisher_id= req.body.publisher_id;
-    const date_of_publish= req.body.Date_of_publish;
-    const description= req.body.Description;
-    const cost= req.body.cost;
-    const ISBN= req.body.ISBN;
+
+    const book_ID = req.params.book_id;
+    const title = req.body.title;
+    const publisher_id = req.body.publisher_id;
+    const date_of_publish = req.body.Date_of_publish;
+    const description = req.body.Description;
+    const cost = req.body.cost;
+    const ISBN = req.body.ISBN;
 
     result = await connection.execute(`insert into books(book_id,title,publisher_id,date_of_publish,description,cost,isbn) values('${book_ID}','${title}','${publisher_id}','${date_of_publish}','${description}','${cost}','${ISBN}')`);
     if (result.rows.length == 0) {
@@ -233,12 +235,12 @@ async function insertBook ( req, res) {
     if (connection) {
       try {
         // Always close connections
-        await connection.close(); 
+        await connection.close();
       } catch (err) {
         return console.error(err.message);
       }
     }
-    
+
   }
 }
 

@@ -1,8 +1,9 @@
 
 const express = require('express');
 const oracledb = require('oracledb');
-const arrayToJSON = require('../util')
+const arrayToJSON = require('../util');
 
+oracledb.autoCommit = true;
 
 const app = express();
 
@@ -24,13 +25,12 @@ app.post('/getAllUserSide', function (req, res) {
 
 
 //delete single data 
-app.delete('/deletebyid/:id', (req, res) => {
+app.delete('/deletebyid', (req, res) => {
   deleteIssueReturnByID(req, res);
 });
 
 //update single data
-app.put('/updatebyid/:id', (req, res) => {
-  console.log(req.body, 'updatedata');
+app.put('/updatebyid', (req, res) => {
   updateIssueReturn(req, res);
 });
 
@@ -131,9 +131,9 @@ async function deleteIssueReturnByID(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
 
-    const issuereturn_ID = req.params.id;
-
-    result = await connection.execute(`delete from issue_return where issue_id='${issuereturn_ID}'`);
+    const issuereturn_ID = parseInt(req.params.id);
+    const deleteQuery = `delete from issue_return where issue_id=${issuereturn_ID}`;
+    result = await connection.execute(deleteQuery);
 
     if (result.rows.length == 0) {
       //query return zero books
@@ -163,19 +163,19 @@ async function updateIssueReturn(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
 
-    const issue_id = req.params.issue_id;
-    const member_id = req.body.member_id;
-    const copy_id = req.body.copy_id;
-    const issue_date = req.body.issue_date;
-    const due_date = req.body.due_date;
-    const late_fine = req.body.late_fine;
-    const return_date = req.body.return_date;
-    const fine_date = req.body.fine_date;
-    const amount_fine = req.body.amount_fine;
+    const issue_id = parseInt(req.body.ISSUE_ID);
+    const member_id = parseInt(req.body.MEMBER_ID);
+    const copy_id = parseInt(req.body.COPY_ID);
+    const issue_date = req.body.ISSUE_DATE;
+    const due_date = req.body.DUE_DATE;
+    const late_fine = parseInt(req.body.LATE_FINE);
+    const return_date = req.body.RETURN_DATE;
+    const fine_date = req.body.FINE_DATE;
+    const amount_fine = parseInt(req.body.AMOUNT_FINE);
 
+    const updateQuery = `update issue_return set member_id=${member_id},copy_id=${copy_id},issue_date=to_utc_timestamp_tz('${issue_date}'),due_date=to_utc_timestamp_tz('${due_date}'), return_date=to_utc_timestamp_tz('${return_date}'),late_fine=${late_fine},amount_fine=${amount_fine} where issue_id = ${issue_id}`;
 
-    result = await connection.execute(`update issue_return set member_id='${member_id}',copy_id='${copy_id}',issue_date='${issue_date}',due_date='${due_date}',late_fine='${late_fine}',return_date='${return_date}',fine_date='${fine_date}',amount_fine='${amount_fine}'
-    where issue_id = ${issue_id}`);
+    result = await connection.execute(updateQuery);
 
     if (result.rows.length == 0) {
       //query return zero books
@@ -206,24 +206,27 @@ async function insertIssueReturn(req, res) {
     connection = await oracledb.getConnection(connectionString);
     console.log('received ', req);
 
-    const getCopyQuery = `select * from copies where book_id = 104 and status='Available' and rownum=1`;
+    //const getCopyQuery = `select * from copies where book_id = 104 and status='Available' and rownum=1`;
+    const query = `execute issue(${req.body.user}, ${req.body.book_id})`;
+    console.log('insert query ', query);
+    result = await connection.execute(query);
+    console.log(result + 'THE RESULT OF INSERTION');
+    // await connection.execute(getCopyQuery).then((copiesgetData) => {
+    //   const copy = arrayToJSON(copiesData.metaData.map((col) => col.name), result.rows)[0];
+    //   console.log("copy ", copy);
 
-    await connection.execute(getCopyQuery).then((copiesgetData) => {
-      const copy = arrayToJSON(copiesData.metaData.map((col) => col.name), result.rows)[0];
-      console.log("copy ", copy);
+    //   const insertIntoCopies = `update copies set status = 'Checked out' where copy_id = ${copy.copy_id}`;
+    //   //await connection.execute(insertIntoCopies).then((copiesData) = {});
 
-      const insertIntoCopies = `update copies set status = 'Checked out' where copy_id = ${copy.copy_id}`;
-      //await connection.execute(insertIntoCopies).then((copiesData) = {});
-
-    });
+    // });
 
 
 
 
 
 
-    const insertIntoCopies = `update copies set status = 'Checked out' where copy_id = ${copy.copy_id}`;
-    const insertIntoIssueReturn = `insert into issue_return values (${req.body.user}, ${copy.copy_id}, sysdate(), sysdate()+14, 100, null, null, null)`
+    //const insertIntoCopies = `update copies set status = 'Checked out' where copy_id = ${copy.copy_id}`;
+    //const insertIntoIssueReturn = `insert into issue_return values (${req.body.user}, ${copy.copy_id}, sysdate(), sysdate()+14, 100, null, null, null)`
 
 
     // const issue_id=req.params.issue_id;
@@ -236,7 +239,7 @@ async function insertIssueReturn(req, res) {
     // const fine_date= req.body.fine_date;
     // const amount_fine= req.body.amount_fine;
 
-    res.send(null);
+    res.send(result);
 
     // result = await connection.execute(`insert into issue_return(issue_id,member_id,copy_id,issue_date,due_date,late_fine,return_date,fine_date,amount_fine) values('${issue_id}','${member_id}','${copy_id}','${issue_date}','${due_date}','${late_fine}','${return_date}'),'${fine_date}','${amount_fine}'`);
     // if (result.rows.length == 0) {
