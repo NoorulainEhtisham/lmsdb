@@ -94,7 +94,8 @@ async function selectAllIssueReturnsUserSide(req, res) {
 
     
     // run query to get all books
-    result = await connection.execute(`SELECT Issue_date,due_date,late_fine,return_date,fine_date,amount_fine FROM issue_return`);
+//    result = await connection.execute(`SELECT Issue_date,due_date,late_fine,return_date,fine_date,amount_fine FROM issue_return`);
+result = await connection.execute(`select * from issue_return ir join copies c on(ir.copy_id=c.copy_id) join books b on (c.book_id=b.book_id)`);
 
     if (result?.rows?.length == 0) {
       //query return zero books

@@ -60,7 +60,7 @@ async function selectAllBooks(req, res) {
   
       
       // run query to get all books
-      result = await connection.execute(`SELECT * FROM Books`);
+      result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories from books`);
 
       // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
       // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
@@ -99,8 +99,11 @@ async function selectBooksById(req, res, id) {
     try {
       connection = await oracledb.getConnection(connectionString);
       // run query to get book with book_id
-      result = await connection.execute(`SELECT * FROM books where book_id=:id`, [id]);
-
+      //result = await connection.execute(`SELECT * FROM books where book_id=:id`, [id]);
+       //result = await connection.execute(`select book_Title(${id}) as Title, book_Authors(${id}) as Authors, book_Categories(${id})as Categories from dual`);
+      result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
+, date_of_publish, description, cost, ISBN from books where book_id=${id}`);
+      // console.log(result);
       if (result.rows.length == 0) {
         //query return zero books
         return res.send('query send no rows');
