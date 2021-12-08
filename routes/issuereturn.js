@@ -207,7 +207,7 @@ async function insertIssueReturn(req, res) {
     console.log('received ', req);
 
     //const getCopyQuery = `select * from copies where book_id = 104 and status='Available' and rownum=1`;
-    const query = `execute issue(${req.body.user}, ${req.body.book_id})`;
+    const query = `execute issue(${parseInt(req.body.user)}, ${parseInt(req.body.book_id)})`;
     console.log('insert query ', query);
     result = await connection.execute(query);
     console.log(result + 'THE RESULT OF INSERTION');
