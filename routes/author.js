@@ -165,7 +165,7 @@ async function updateAuthor(req, res) {
     try {
         connection = await oracledb.getConnection(connectionString);
 
-        const author_ID = req.params.book_id;
+        const author_ID = req.params.AUTHOR_ID;
         const first_name = req.body.first_name;
         const last_name = req.body.last_name;
         const email = req.body.email;
@@ -201,13 +201,13 @@ async function insertAuthor(req, res) {
     try {
         connection = await oracledb.getConnection(connectionString);
 
-        const author_ID = req.params.book_id;
+        const author_ID = req.params.AUTHOR_ID;
         const first_name = req.body.first_name;
         const last_name = req.body.last_name;
         const email = req.body.email;
 
 
-        result = await connection.execute(`insert into authors(author_id,first_name,last_name,email) values('${author_ID}','${first_name}','${last_name}','${email}')`);
+        result = await connection.execute(`insert into authors(author_id,first_name,last_name,email) values(${null},'${first_name}','${last_name}','${email}')`);
         if (result.rows.length == 0) {
             //query return zero authors
             return res.send('query send no rows');

@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const cors = require("cors");
 
 const bookRoutes = require('./routes/book');
+const memberRoutes = require('./routes/member');
 const authorRoutes = require('./routes/author');
 const issuereturnRoutes = require('./routes/issuereturn');
 
@@ -23,6 +24,8 @@ app.use(cors(corsOptions))
 app.use("/book", bookRoutes);
 app.use("/author", authorRoutes);
 app.use("/issuereturn", issuereturnRoutes);
+app.use("/member", memberRoutes);
+
 
 const PORT = process.env.PORT || 4000;
 

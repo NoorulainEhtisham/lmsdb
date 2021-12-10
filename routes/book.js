@@ -442,24 +442,27 @@ async function updateBook(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
 
-    const book_ID = req.params.book_id;
-    const title = req.body.title;
-    const publisher_id = req.body.publisher_id;
-    const date_of_publish = req.body.Date_of_publish;
-    const description = req.body.Description;
-    const cost = req.body.cost;
+
+    const book_ID = parseInt(req.params.id);
+    const title = req.body.TITLE;
+    const publisher_id = parseInt(req.body.PUBLISHER_ID);
+    const date_of_publish = req.body.DATE_OF_PUBLISH;
+    const description = req.body.DESCRIPTION;
+    const cost = parseInt(req.body.COST);
     const ISBN = req.body.ISBN;
+    //console.log(description)
 
 
-    result = await connection.execute(`update books set title='${title}',publisher_id='${publisher_id}',date_of_publish='${date_of_publish}',description='${description}',cost='${cost}',ISBN='${ISBN}'
-    where book_id = ${book_ID}`);
+    query = await connection.execute(`UPDATE BOOKS SET BOOK_ID=${book_ID}, TITLE ='${title}', PUBLISHER_ID = ${publisher_id} , DATE_OF_PUBLISH = TO_Date('${date_of_publish}','dd-mon-yyyy'), DESCRIPTION = '${description}', COST= ${cost}, ISBN='${ISBN}' where BOOK_ID = ${book_ID}`);
+    /*result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
+    , date_of_publish, description, cost, ISBN from books where BOOK_ID= ${book_ID}`)*/
 
     if (result.rows.length == 0) {
-      //query return zero books
+      //return zero books
       return res.send('query send no rows');
     } else {
       //send all books
-      return res.send(result.rows);
+      return res.send('Data updated successfully', result);
     }
 
   } catch (err) {
