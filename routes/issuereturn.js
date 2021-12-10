@@ -108,6 +108,8 @@ async function selectAllIssueReturnsUserSide(req, res) {
     } else {
       //send all books
 
+      console.log('result', result);
+
       const columns = result.metaData.map((col) => col.name);
       const data = result.rows;
       const finalArray = arrayToJSON(columns, data);
