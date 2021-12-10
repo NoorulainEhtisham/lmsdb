@@ -102,7 +102,6 @@ async function selectAllIssueReturnsUserSide(req, res) {
     // run query to get all books
     // result = await connection.execute(`SELECT Issue_date,due_date,late_fine,return_date,fine_date,amount_fine FROM issue_return where member_id=${user_id}`);
     result = await connection.execute(` select b.Title, ir.Issue_date,ir.due_date,ir.amount_fine,ir.late_fine,ir.return_date,ir.fine_date from books b join copies c on b.Book_ID = c.Book_id join Issue_return ir on c.copy_id=ir.copy_id where member_id=${user_id}`);
-
     if (result?.rows?.length == 0) {
       //query return zero books
       return res.send('no rows found');
@@ -136,9 +135,10 @@ async function selectAllIssueReturnsUserSide(req, res) {
 async function deleteIssueReturnByID(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
-
-    const issuereturn_ID = parseInt(req.params.id);
+    console.log(req.body);
+    const issuereturn_ID = parseInt(req.body.id);
     const deleteQuery = `delete from issue_return where issue_id=${issuereturn_ID}`;
+    console.log(deleteQuery);
     result = await connection.execute(deleteQuery);
     if (result.rows.length == 0) {
       //query return zero books
@@ -168,17 +168,45 @@ async function updateIssueReturn(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
     console.log('req.body: ', req.body);
-    const issue_id = parseInt(req.body.ISSUE_ID);
-    const member_id = parseInt(req.body.MEMBER_ID);
-    const copy_id = parseInt(req.body.COPY_ID);
-    const issue_date = req.body.ISSUE_DATE;
-    const due_date = req.body.DUE_DATE;
-    const late_fine = parseInt(req.body.LATE_FINE);
-    const return_date = req.body.RETURN_DATE;
-    const fine_date = req.body.FINE_DATE;
-    const amount_fine = parseInt(req.body.AMOUNT_FINE);
-    console.log('parsed due date: ', Date.parse(due_date));
-    const updateQuery = `update issue_return set member_id=${member_id},copy_id=${copy_id},issue_date=to_utc_timestamp_tz('${issue_date}'),due_date=to_utc_timestamp_tz('${due_date}'), return_date=to_utc_timestamp_tz(${return_date}),late_fine=${late_fine},amount_fine=${amount_fine} where issue_id = ${issue_id}`;
+    const issueid = parseInt(req.body.ISSUE_ID);
+    const memberid = parseInt(req.body.MEMBER_ID);
+    const copyid = parseInt(req.body.COPY_ID);
+    const latefine = parseInt(req.body.LATE_FINE);
+    const amountfine = parseInt(req.body.AMOUNT_FINE);
+
+    let returndate = '';
+    if (req.body.RETURN_DATE) {
+      returndate = "\'".concat(req.body.RETURN_DATE);
+      returndate = returndate.concat("\'");
+    } else {
+      returndate = null;
+    }
+    let issuedate = '';
+    if (req.body.ISSUE_DATE) {
+      issuedate = "\'".concat(req.body.ISSUE_DATE);
+      issuedate = issuedate.concat("\'");
+    } else {
+      issuedate = null;
+    }
+    let duedate = '';
+    if (req.body.DUE_DATE) {
+      duedate = "\'".concat(req.body.DUE_DATE);
+      duedate = duedate.concat("\'");
+    } else {
+      duedate = null;
+    }
+    let finedate = '';
+    if (req.body.FINE_DATE) {
+      finedate = "\'".concat(req.body.FINE_DATE);
+      finedate = finedate.concat("\'");
+    } else {
+      finedate = null;
+    }
+    // const return_status = req.body.RETURN_STATUS; // MARK STATUS
+
+    //const updateQuery = `update issue_return set member_id=${member_id},copy_id=${copy_id},issue_date=to_utc_timestamp_tz(${issue_date}),due_date=to_utc_timestamp_tz(${due_date}),late_fine=${late_fine}, return_date=to_utc_timestamp_tz(${return_date}),fine_date=to_utc_timestamp_tz(${fine_date}),amount_fine=${amount_fine} where issue_id = ${issue_id}`;
+    const updateQuery = `update issue_return set member_id=${memberid},copy_id=${copyid},issue_date=TO_Date(${issuedate},'dd-mon-yyyy'),due_date=TO_Date(${duedate},'dd-mon-yyyy'),late_fine=${latefine}, return_date=TO_Date(${returndate},'dd-mon-yyyy'),fine_date=TO_Date(${finedate},'dd-mon-yyyy'),amount_fine=${amountfine} where issue_id = ${issueid}`;
+
     console.log('update query: ', updateQuery);
     result = await connection.execute(updateQuery);
     console.log('result of update query: ', result);
@@ -202,7 +230,6 @@ async function updateIssueReturn(req, res) {
         return console.error(err.message);
       }
     }
-
   }
 }
 
@@ -277,19 +304,42 @@ async function insertIssueReturn(req, res) {
 async function insertbyadminIssueReturn(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
-    console.log('received ', req);
     const memberid = parseInt(req.body.MEMBER_ID);
     const copyid = parseInt(req.body.COPY_ID);
-    const issuedate = req.body.ISSUE_DATE;
-    const duedate = req.body.DUE_DATE;
     const latefine = parseInt(req.body.LATE_FINE);
-    const returndate = req.body.RETURN_DATE;
-    const finedate = req.body.FINE_DATE;
     const amountfine = parseInt(req.body.AMOUNT_FINE);
+    let returndate = '';
+    if (req.body.RETURN_DATE) {
+      returndate = "\'".concat(req.body.RETURN_DATE);
+      returndate = returndate.concat("\'");
+    } else {
+      returndate = null;
+    }
+    let issuedate = '';
+    if (req.body.ISSUE_DATE) {
+      issuedate = "\'".concat(req.body.ISSUE_DATE);
+      issuedate = issuedate.concat("\'");
+    } else {
+      issuedate = null;
+    }
+    let duedate = '';
+    if (req.body.DUE_DATE) {
+      duedate = "\'".concat(req.body.DUE_DATE);
+      duedate = duedate.concat("\'");
+    } else {
+      duedate = null;
+    }
+    let finedate = '';
+    if (req.body.FINE_DATE) {
+      finedate = "\'".concat(req.body.FINE_DATE);
+      finedate = finedate.concat("\'");
+    } else {
+      finedate = null;
+    }
 
-    const updates = `insert into issue_return values(null, ${memberid},${copyid},issue_date=to_utc_timestamp_tz('${issuedate}'),issue_date=to_utc_timestamp_tz('${duedate}'),${latefine},issue_date=to_utc_timestamp_tz('${returndate}'),issue_date=to_utc_timestamp_tz('${finedate}'),${amountfine})`;
-    console.log(updates);
-    result = await connection.execute(updates);
+    const inserts = `insert into issue_return values(null, ${memberid},${copyid},TO_Date(${issuedate},'dd-mon-yyyy'),TO_Date(${duedate},'dd-mon-yyyy'),${latefine},TO_Date(${returndate},'dd-mon-yyyy'),TO_Date(${finedate},'dd-mon-yyyy'),${amountfine})`;
+    console.log(inserts);
+    result = await connection.execute(inserts);
     console.log('Result', result);
     res.send(result);
 
