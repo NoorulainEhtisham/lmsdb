@@ -1,5 +1,3 @@
-// import express from 'express';
-// import oracledb from 'oracledb';
 const express = require('express');
 const oracledb = require('oracledb');
 const arrayToJSON = require('../util');
@@ -100,9 +98,6 @@ async function selectAllBooksData(req, res) {
     ,b.date_of_publish, b.description, b.cost, b.ISBN, book_copies(b.book_id) as AvailableCopies 
     from books b join publishers p on b.publisher_id=p.publisher_id`);
 
-    // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
-    // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
-
     if (result?.rows?.length == 0) {
       //query return zero books
       return res.send('no rows found');
@@ -131,8 +126,8 @@ async function selectAllBooksData(req, res) {
     }
 
   }
-  
-  
+
+
 }
 
 async function selectAllBooks(req, res) {
@@ -145,9 +140,6 @@ async function selectAllBooks(req, res) {
 
     // run query to get all books
     result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories from books`);
-
-    // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
-    // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
 
     if (result?.rows?.length == 0) {
       //query return zero books
@@ -190,9 +182,6 @@ async function selectAllCopies(req, res) {
     // run query to get all books
     result = await connection.execute(`select * from Copies`);
 
-    // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
-    // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
-
     if (result?.rows?.length == 0) {
       //query return zero books
       return res.send('no rows found');
@@ -228,17 +217,12 @@ async function selectAllCopies(req, res) {
 async function selectBooksById(req, res, id) {
   try {
     connection = await oracledb.getConnection(connectionString);
-    // run query to get book with book_id
-    //result = await connection.execute(`SELECT * FROM books where book_id=:id`, [id]);
-    //result = await connection.execute(`select book_Title(${id}) as Title, book_Authors(${id}) as Authors, book_Categories(${id})as Categories from dual`);
-    // result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
-    // , date_of_publish, description, cost, ISBN, book_copies(book_id) as AvailableCopies from books where book_id=${id}`);
+
     result = await connection.execute(`select b.book_id, book_Title(b.book_id) as Title, book_Authors(b.book_id) as Authors, book_Categories(b.book_id)as Categories, b.publisher_id, p.name as PublisherName
     ,b.date_of_publish, b.description, b.cost, b.ISBN, book_copies(b.book_id) as AvailableCopies 
     from books b join publishers p on b.publisher_id=p.publisher_id where book_id=${id}`);
 
 
-    // console.log(result);
     if (result.rows.length == 0) {
       //query return zero books
       return res.send('query send no rows');
@@ -249,7 +233,6 @@ async function selectBooksById(req, res, id) {
 
       return res.send(finalArray[0]);
       //send all books
-      //return res.send(result.rows);
     }
 
   } catch (err) {
@@ -272,11 +255,7 @@ async function selectBooksById(req, res, id) {
 async function selectCopiesById(req, res, id) {
   try {
     connection = await oracledb.getConnection(connectionString);
-    // run query to get book with book_id
-    //result = await connection.execute(`SELECT * FROM books where book_id=:id`, [id]);
-    //result = await connection.execute(`select book_Title(${id}) as Title, book_Authors(${id}) as Authors, book_Categories(${id})as Categories from dual`);
     result = await connection.execute(`select * from COPIES where BOOK_ID=${id}`);
-    // console.log(result);
     if (result.rows.length == 0) {
       //query return zero books
       return res.send('No records to display');
@@ -287,7 +266,6 @@ async function selectCopiesById(req, res, id) {
 
       return res.send(finalArray);
       //send all books
-      //return res.send(result.rows);
     }
 
   } catch (err) {
@@ -306,23 +284,18 @@ async function selectCopiesById(req, res, id) {
   }
 }
 
-async function deleteCopy(req, res){
-  try{
-        connection = await oracledb.getConnection(connectionString);
-        const copyidno = req.body.COPY_ID;
-        console.log(req.body)
-        result = await connection.execute(`delete from COPIES where COPY_ID =${copyidno}`);
-        console.log('Result', result)
+async function deleteCopy(req, res) {
+  try {
+    connection = await oracledb.getConnection(connectionString);
+    const copyidno = req.body.COPY_ID;
+    console.log(req.body)
+    result = await connection.execute(`delete from COPIES where COPY_ID =${copyidno}`);
+    console.log('Result', result)
 
-        // if (result.rows.length == 0) {
-        //   //query return zero books
-        //   return res.send('query send no rows');
-        // } else {
-        //   //send all books
-          return res.send(result.rows);
-        //}      
+    return res.send(result.rows);
 
-  } catch(err) {
+
+  } catch (err) {
     return res.send(err.message);
   } finally {
     if (connection) {
@@ -330,11 +303,11 @@ async function deleteCopy(req, res){
         await connection.close();
       } catch (err) {
         return console.error(err.message);
-        
+
       }
     }
 
-  }    
+  }
 }
 
 
@@ -347,13 +320,8 @@ async function deleteBookByID(req, res) {
     query = await connection.execute(`delete from books where book_id='${book_ID}'`);
     result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
     , date_of_publish, description, cost, ISBN, book_copies(book_id) as AvailableCopies from books`);
-    //if (result.rows.length == 0) {
-      //query return zero books
-      //return res.send('query send no rows');
-    //} else {
-      //send all books
-      return res.send(result);
-    //}
+
+    return res.send(result);
 
   } catch (err) {
     //send error message
@@ -375,39 +343,34 @@ async function insertCopy(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
 
-  const book_id = parseInt(req.params.id);
-  console.log(book_id)
-  const Shelf_no = parseInt(req.body.SHELF_NO);
-  console.log(Shelf_no)
-  query = await connection.execute(`insert into COPIES values(${null}, ${book_id}, 'Available', ${Shelf_no})`);
-  result = await connection.execute(`select * from COPIES where BOOK_ID=${book_id}`);
-  console.log("Result",result.rows)
+    const book_id = parseInt(req.params.id);
+    console.log(book_id)
+    const Shelf_no = parseInt(req.body.SHELF_NO);
+    console.log(Shelf_no)
+    query = await connection.execute(`insert into COPIES values(${null}, ${book_id}, 'Available', ${Shelf_no})`);
+    result = await connection.execute(`select * from COPIES where BOOK_ID=${book_id}`);
+    console.log("Result", result.rows)
 
-  //if (result.rows.length == 0) {
-    //query return zero books
-    //return res.send('query send no rows');
-  //} else {
-    //send all books
-    return res.send('Data inserted',result);
-  //}
+    return res.send('Data inserted', result);
 
-} catch (err) {
-  //send error message
-  return res.send(err.message);
-} finally {
-  if (connection) {
-    try {
-      // Always close connections
-      await connection.close();
-    } catch (err) {
-      return console.error(err.message);
+
+  } catch (err) {
+    //send error message
+    return res.send(err.message);
+  } finally {
+    if (connection) {
+      try {
+        // Always close connections
+        await connection.close();
+      } catch (err) {
+        return console.error(err.message);
+      }
     }
-  }
 
+  }
 }
-  }
 
-async function updateCopy(req, res){
+async function updateCopy(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
 
@@ -419,14 +382,6 @@ async function updateCopy(req, res){
     result = await connection.execute(`update COPIES set BOOK_ID='${bookid}', STATUS='${status}', SHELF_NO='${Shelf_no}' where COPY_ID = ${copyid}`);
 
     console.log(req.body)
-
-    // if (result.rows.length == 0) {
-    //   //query return zero books
-    //   return res.send('query send no rows');
-    // } else {
-      //send all books
-      //return res.send(result.rows);
-    //}
 
   } catch (err) {
     //send error message
@@ -461,16 +416,7 @@ async function updateBook(req, res) {
     const query = `UPDATE BOOKS SET BOOK_ID=${book_ID}, TITLE ='${title}', PUBLISHER_ID = ${publisher_id} , DATE_OF_PUBLISH = TO_Date('${date_of_publish}','dd-mon-yyyy'), DESCRIPTION = '${description}', COST= ${cost}, ISBN='${ISBN}' where BOOK_ID = ${book_ID}`;
     console.log(query);
     result = await connection.execute(query);
-    /*result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
-    , date_of_publish, description, cost, ISBN from books where BOOK_ID= ${book_ID}`)*/
-
-    //if (result.rows.length == 0) {
-      //return zero books
-      //return res.send('query send no rows');
-    //} else {
-      //send all books
-      return res.send('Data updated successfully', result);
-    //}
+    return res.send('Data updated successfully', result);
 
   } catch (err) {
     //send error message
@@ -500,8 +446,7 @@ async function insertBook(req, res) {
 
     query = await connection.execute(`insert into books(book_id,title,publisher_id,date_of_publish,isbn) values(${null},'${title}', '${publisher_id}', TO_Date('${date_of_publish}','dd-mon-yyyy'),'${ISBN}')`);
     book__id = await connection.execute(`select book_id from BOOKS where ISBN = '${ISBN}'`)
-    // console.log('Bookid', book__id.rows[0][0])
-    // addcopy = await connection.execute(`insert into copies() values (${null}, ${book__id.rows[0][0]}, 'Available')`)
+
     result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
     , date_of_publish, description, cost, ISBN, book_copies(book_id) as AvailableCopies from books`);
     //alert(result)

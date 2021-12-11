@@ -258,30 +258,9 @@ async function insertIssueReturn(req, res) {
     console.log('Result', result);
 
 
-    //const getCopyQuery = `select * from copies where book_id = 104 and status='Available' and rownum=1`;
-    // const query = `execute issue(${userid}, ${bookid})`;
-    // console.log('insert query: ', query);
-    // result = await connection.execute(query);
-    // console.log(result + 'THE RESULT OF INSERTION');
-    // await connection.execute(getCopyQuery).then((copiesgetData) => {
-    //   const copy = arrayToJSON(copiesData.metaData.map((col) => col.name), result.rows)[0];
-    //   console.log("copy ", copy);
-
-    //   const insertIntoCopies = `update copies set status = 'Checked out' where copy_id = ${copy.copy_id}`;
-    //   //await connection.execute(insertIntoCopies).then((copiesData) = {});
-
-    // });
 
     res.send(result);
 
-    // result = await connection.execute(`insert into issue_return(issue_id,member_id,copy_id,issue_date,due_date,late_fine,return_date,fine_date,amount_fine) values('${issue_id}','${member_id}','${copy_id}','${issue_date}','${due_date}','${late_fine}','${return_date}'),'${fine_date}','${amount_fine}'`);
-    // if (result.rows.length == 0) {
-    //   //query return zero books
-    //   return res.send('query send no rows');
-    // } else {
-    //   //send all books
-    //   return res.send(result.rows);
-    // }
 
   } catch (err) {
     //send error message
