@@ -4,7 +4,7 @@ const oracledb = require('oracledb');
 const { consoleTestResultHandler } = require('tslint/lib/test');
 const arrayToJSON = require('../util');
 
-oracledb.autoCommit = true; //add this to all files
+oracledb.autoCommit = true;
 
 const app = express();
 
@@ -16,7 +16,7 @@ const connectionString = {
 
 let connection = undefined, result = undefined;
 
-//get /getAllBooks
+//Admin and User are shown separate details
 app.get('/getAllAdminSide', function (req, res) {
   selectAllIssueReturnsAdminSide(req, res);
 })
@@ -25,22 +25,23 @@ app.post('/getAllUserSide', function (req, res) {
 })
 
 
-//delete single data 
+//delete single record
 app.delete('/deletebyid', (req, res) => {
   deleteIssueReturnByID(req, res);
 });
 
-//update single data
+//update single record
 app.put('/updatebyid', (req, res) => {
   updateIssueReturn(req, res);
 });
 
-// insertion
+// insertion by Issue button by user
 app.post('/insert', (req, res) => {
   console.log(req.body, 'createData');
   insertIssueReturn(req, res);
 });
 
+//insertion by admin
 app.post('/insertbyadmin', (req, res) => {
   console.log(req.body, 'createData');
   insertbyadminIssueReturn(req, res);
@@ -54,18 +55,14 @@ async function selectAllIssueReturnsAdminSide(req, res) {
     connection = await oracledb.getConnection(connectionString);
 
 
-    // run query to get all books
+    // run query to get all records
     result = await connection.execute(`SELECT * FROM issue_return`);
 
-    // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
-    // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
-
     if (result?.rows?.length == 0) {
-      //query return zero books
+      //query returns zero records
       return res.send('no rows found');
     } else {
-      //send all books
-
+      //send all records
       const columns = result.metaData.map((col) => col.name);
       const data = result.rows;
       const finalArray = arrayToJSON(columns, data);
@@ -79,7 +76,7 @@ async function selectAllIssueReturnsAdminSide(req, res) {
   } finally {
     if (connection) {
       try {
-        // Always close connections
+        // close connections
         await connection.close();
         console.log('close connection success');
       } catch (err) {
@@ -99,15 +96,13 @@ async function selectAllIssueReturnsUserSide(req, res) {
 
     const user_id = req.body.user_id;
 
-    // run query to get all books
-    // result = await connection.execute(`SELECT Issue_date,due_date,late_fine,return_date,fine_date,amount_fine FROM issue_return where member_id=${user_id}`);
+    // run query to get user relevant columns
     result = await connection.execute(` select b.Title, ir.Issue_date,ir.due_date,ir.amount_fine,ir.late_fine,ir.return_date,ir.fine_date from books b join copies c on b.Book_ID = c.Book_id join Issue_return ir on c.copy_id=ir.copy_id where member_id=${user_id}`);
     if (result?.rows?.length == 0) {
-      //query return zero books
+      //query returns zero records
       return res.send('no rows found');
     } else {
-      //send all books
-
+      //send all records
       console.log('result', result);
 
       const columns = result.metaData.map((col) => col.name);
@@ -123,7 +118,7 @@ async function selectAllIssueReturnsUserSide(req, res) {
   } finally {
     if (connection) {
       try {
-        // Always close connections
+        //close connections
         await connection.close();
         console.log('close connection success');
       } catch (err) {
@@ -138,15 +133,14 @@ async function deleteIssueReturnByID(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
     console.log(req.body);
-    const issuereturn_ID = parseInt(req.body.id);
+    const issuereturn_ID = parseInt(req.body.id); //frontend sent String, convert it to number
     const deleteQuery = `delete from issue_return where issue_id=${issuereturn_ID}`;
     console.log(deleteQuery);
     result = await connection.execute(deleteQuery);
     if (result.rows.length == 0) {
-      //query return zero books
+      //query return zero records
       return res.send('query send no rows');
     } else {
-      //send all books
       return res.send(result.rows);
     }
 
@@ -156,7 +150,7 @@ async function deleteIssueReturnByID(req, res) {
   } finally {
     if (connection) {
       try {
-        // Always close connections
+        // Close connections
         await connection.close();
       } catch (err) {
         return console.error(err.message);
@@ -166,16 +160,22 @@ async function deleteIssueReturnByID(req, res) {
   }
 }
 
+//update by id (Only Admin can do this)
 async function updateIssueReturn(req, res) {
   try {
     connection = await oracledb.getConnection(connectionString);
     console.log('req.body: ', req.body);
+    //parse strings sent by frontend to numbers
     const issueid = parseInt(req.body.ISSUE_ID);
     const memberid = parseInt(req.body.MEMBER_ID);
     const copyid = parseInt(req.body.COPY_ID);
     const latefine = parseInt(req.body.LATE_FINE);
     const amountfine = parseInt(req.body.AMOUNT_FINE);
 
+    //RETURN_DATE = TO_Date(${returndate},'dd-mon-yyyy')'
+    //returndate=TO_DATE('12-JAN-20','dd-mon-yyyy'))
+    //Fixing format for db query
+    //if null, send object null , if date, send string 'date'
     let returndate = '';
     if (req.body.RETURN_DATE) {
       returndate = "\'".concat(req.body.RETURN_DATE);
@@ -204,19 +204,16 @@ async function updateIssueReturn(req, res) {
     } else {
       finedate = null;
     }
-    // const return_status = req.body.RETURN_STATUS; // MARK STATUS
 
-    //const updateQuery = `update issue_return set member_id=${member_id},copy_id=${copy_id},issue_date=to_utc_timestamp_tz(${issue_date}),due_date=to_utc_timestamp_tz(${due_date}),late_fine=${late_fine}, return_date=to_utc_timestamp_tz(${return_date}),fine_date=to_utc_timestamp_tz(${fine_date}),amount_fine=${amount_fine} where issue_id = ${issue_id}`;
     const updateQuery = `update issue_return set member_id=${memberid},copy_id=${copyid},issue_date=TO_Date(${issuedate},'dd-mon-yyyy'),due_date=TO_Date(${duedate},'dd-mon-yyyy'),late_fine=${latefine}, return_date=TO_Date(${returndate},'dd-mon-yyyy'),fine_date=TO_Date(${finedate},'dd-mon-yyyy'),amount_fine=${amountfine} where issue_id = ${issueid}`;
 
     console.log('update query: ', updateQuery);
     result = await connection.execute(updateQuery);
     console.log('result of update query: ', result);
     if (result.rows.length == 0) {
-      //query return zero books
+      //query returns zero records
       return res.send('query send no rows');
     } else {
-      //send all books
       return res.send(result.rows);
     }
 
@@ -226,7 +223,7 @@ async function updateIssueReturn(req, res) {
   } finally {
     if (connection) {
       try {
-        // Always close connections
+        // Close connections
         await connection.close();
       } catch (err) {
         return console.error(err.message);

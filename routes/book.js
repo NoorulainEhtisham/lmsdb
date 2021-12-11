@@ -103,8 +103,13 @@ async function selectBooksById(req, res, id) {
     // run query to get book with book_id
     //result = await connection.execute(`SELECT * FROM books where book_id=:id`, [id]);
     //result = await connection.execute(`select book_Title(${id}) as Title, book_Authors(${id}) as Authors, book_Categories(${id})as Categories from dual`);
-    result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
-    , date_of_publish, description, cost, ISBN, book_copies(book_id) as AvailableCopies from books where book_id=${id}`);
+    // result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
+    // , date_of_publish, description, cost, ISBN, book_copies(book_id) as AvailableCopies from books where book_id=${id}`);
+    result = await connection.execute(`select b.book_id, book_Title(b.book_id) as Title, book_Authors(b.book_id) as Authors, book_Categories(b.book_id)as Categories, p.name as PublisherName
+    ,b.date_of_publish, b.description, b.cost, b.ISBN, book_copies(b.book_id) as AvailableCopies 
+    from books b join publishers p on b.publisher_id=p.publisher_id where book_id=${id}`);
+
+
     // console.log(result);
     if (result.rows.length == 0) {
       //query return zero books
