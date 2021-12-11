@@ -452,18 +452,19 @@ async function updateBook(req, res) {
     const ISBN = req.body.ISBN;
     //console.log(description)
 
-
-    query = await connection.execute(`UPDATE BOOKS SET BOOK_ID=${book_ID}, TITLE ='${title}', PUBLISHER_ID = ${publisher_id} , DATE_OF_PUBLISH = TO_Date('${date_of_publish}','dd-mon-yyyy'), DESCRIPTION = '${description}', COST= ${cost}, ISBN='${ISBN}' where BOOK_ID = ${book_ID}`);
+    const query = `UPDATE BOOKS SET BOOK_ID=${book_ID}, TITLE ='${title}', PUBLISHER_ID = ${publisher_id} , DATE_OF_PUBLISH = TO_Date('${date_of_publish}','dd-mon-yyyy'), DESCRIPTION = '${description}', COST= ${cost}, ISBN='${ISBN}' where BOOK_ID = ${book_ID}`;
+    console.log(query);
+    result = await connection.execute(query);
     /*result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
     , date_of_publish, description, cost, ISBN from books where BOOK_ID= ${book_ID}`)*/
 
-    if (result.rows.length == 0) {
+    //if (result.rows.length == 0) {
       //return zero books
-      return res.send('query send no rows');
-    } else {
+      //return res.send('query send no rows');
+    //} else {
       //send all books
       return res.send('Data updated successfully', result);
-    }
+    //}
 
   } catch (err) {
     //send error message
