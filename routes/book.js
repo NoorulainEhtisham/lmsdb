@@ -96,8 +96,9 @@ async function selectAllBooksData(req, res) {
 
 
     // run query to get all books
-    result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
-    , date_of_publish, description, cost, ISBN, book_copies(book_id) as AvailableCopies from books`);
+    result = await connection.execute(`select b.book_id, book_Title(b.book_id) as Title, book_Authors(b.book_id) as Authors, book_Categories(b.book_id)as Categories, b.publisher_id, p.name as PublisherName
+    ,b.date_of_publish, b.description, b.cost, b.ISBN, book_copies(b.book_id) as AvailableCopies 
+    from books b join publishers p on b.publisher_id=p.publisher_id`);
 
     // result = await connection.execute(`select * from books b join book_author ba on b.book_id=ba.book_id join authors a on ba.author_id=a.author_id 
     // join book_category bc on b.book_id=bc.book_id join category c on bc.category_id = c.category_id `);
@@ -232,7 +233,7 @@ async function selectBooksById(req, res, id) {
     //result = await connection.execute(`select book_Title(${id}) as Title, book_Authors(${id}) as Authors, book_Categories(${id})as Categories from dual`);
     // result = await connection.execute(`select book_id, book_Title(book_id) as Title, book_Authors(book_id) as Authors, book_Categories(book_id)as Categories, publisher_id
     // , date_of_publish, description, cost, ISBN, book_copies(book_id) as AvailableCopies from books where book_id=${id}`);
-    result = await connection.execute(`select b.book_id, book_Title(b.book_id) as Title, book_Authors(b.book_id) as Authors, book_Categories(b.book_id)as Categories, p.name as PublisherName
+    result = await connection.execute(`select b.book_id, book_Title(b.book_id) as Title, book_Authors(b.book_id) as Authors, book_Categories(b.book_id)as Categories, b.publisher_id, p.name as PublisherName
     ,b.date_of_publish, b.description, b.cost, b.ISBN, book_copies(b.book_id) as AvailableCopies 
     from books b join publishers p on b.publisher_id=p.publisher_id where book_id=${id}`);
 
