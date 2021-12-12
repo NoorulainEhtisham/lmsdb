@@ -137,13 +137,8 @@ async function deleteAuthorByID(req, res) {
 
         result = await connection.execute(`delete from authors where Author_id='${author_ID}'`);
 
-        if (result.rows.length == 0) {
-            //query return zero authors
-            return res.send('query send no rows');
-        } else {
-            //send all authors
-            return res.send(result.rows);
-        }
+        return res.send(result);
+
 
     } catch (err) {
         //send error message
@@ -173,13 +168,8 @@ async function updateAuthor(req, res) {
         result = await connection.execute(`update authors set first_name='${first_name}',last_name='${last_name}',email='${email}'
     where author_id = ${author_ID}`);
 
-        if (result.rows.length == 0) {
-            //query return zero authors
-            return res.send('query send no rows');
-        } else {
-            //send all authors
-            return res.send(result.rows);
-        }
+        return res.send(result);
+
 
     } catch (err) {
         //send error message
@@ -208,13 +198,8 @@ async function insertAuthor(req, res) {
 
 
         result = await connection.execute(`insert into authors(author_id,first_name,last_name,email) values(${null},'${first_name}','${last_name}','${email}')`);
-        if (result.rows.length == 0) {
-            //query return zero authors
-            return res.send('query send no rows');
-        } else {
-            //send all authors
-            return res.send(result.rows);
-        }
+        return res.send(result);
+
 
     } catch (err) {
         //send error message
