@@ -15,7 +15,7 @@ let connection = undefined, result = undefined;
 
 //get /getAllCategories
 app.get('/getall', function (req, res) {
-    selectAllCategories(req, res);
+    selectAllPublishers(req, res);
 })
 
 //get /category?id=<id category>
@@ -28,33 +28,33 @@ app.get('/getbyid', function (req, res) {
         res.send('Query param id is not number')
         return
     }
-    selectCategoryById(req, res, id);
+    selectPublisherById(req, res, id);
 })
 
 //delete single data 
 app.delete('/deletebyid/:id', (req, res) => {
-    deleteCategoryByID(req, res);
+    deletePublisherByID(req, res);
 });
 
 //update single data
 app.put('/updatebyid/:id', (req, res) => {
     console.log(req.body, 'updatedata');
-    updateCategory(req, res);
+    updatePublisher(req, res);
 });
 
 // insertion
 app.post('/insert', (req, res) => {
     console.log(req.body, 'createData');
-    insertCategory(req, res);
+    insertPublisher(req, res);
 });
 
 
-async function selectAllCategories(req, res) {
+async function selectAllPublishers(req, res) {
     try {
         console.log('connected to database');
         connection = await oracledb.getConnection(connectionString);
 
-        result = await connection.execute(`SELECT * FROM Category`);
+        result = await connection.execute(`SELECT * FROM Publishers`);
 
         if (result?.rows?.length == 0) {
             return res.status(400).json({
@@ -83,11 +83,11 @@ async function selectAllCategories(req, res) {
     }
 }
 
-async function selectCategoryById(req, res, id) {
+async function selectPublisherById(req, res, id) {
     try {
         connection = await oracledb.getConnection(connectionString);
         // run query to get book with book_id
-        result = await connection.execute(`SELECT * FROM Category where Category_id=:id`, [id]);
+        result = await connection.execute(`SELECT * FROM Publishers where Publisher_id=:id`, [id]);
 
         if (result.rows.length == 0) {
             //query return zero authors
@@ -113,13 +113,13 @@ async function selectCategoryById(req, res, id) {
     }
 }
 
-async function deleteCategoryByID(req, res) {
+async function deletePublisherByID(req, res) {
     try {
         connection = await oracledb.getConnection(connectionString);
 
-        const category_ID = req.params.id;
+        const publisher_ID = req.params.id;
 
-        result = await connection.execute(`delete from Category where Category_id='${category_ID}'`);
+        result = await connection.execute(`delete from Publishers where Publisher_id='${publisher_ID}'`);
 
         return res.send(result);
 
@@ -139,19 +139,21 @@ async function deleteCategoryByID(req, res) {
     }
 }
 
-async function updateCategory(req, res) {
+async function updatePublisher(req, res) {
     try {
         connection = await oracledb.getConnection(connectionString);
 
-        const category_ID = req.params.id;
-        const category_name = req.body.category_name;
-        const cat_desc = req.body.cat_desc;
+        const publisher_ID = req.params.id;
+        const name = req.body.name;
+        const address = req.body.address;
+        const email = req.body.email;
+        const phone_no = req.body.phone_no;
 
-        result = await connection.execute(`update Category set Category_name='${category_name}',Cat_desc='${cat_desc}'
-    where Category_id = ${category_ID}`);
+
+        result = await connection.execute(`update Publishers set name='${name}',address='${address}',email='${email}',phone_no='${phone_no}'
+    where Publisher_id = ${publisher_ID}`);
 
         return res.send(result)
-
 
     } catch (err) {
         //send error message
@@ -169,14 +171,16 @@ async function updateCategory(req, res) {
     }
 }
 
-async function insertCategory(req, res) {
+async function insertPublisher(req, res) {
     try {
         connection = await oracledb.getConnection(connectionString);
 
-        const category_name = req.body.category_name;
-        const cat_desc = req.body.cat_desc;
+        const name = req.body.name;
+        const address = req.body.address;
+        const email = req.body.email;
+        const phone_no = req.body.phone_no;
 
-        result = await connection.execute(`insert into Category(Category_id,Category_name,Cat_desc) values(${null},'${category_name}','${cat_desc}'`);
+        result = await connection.execute(`insert into Publishers(Publisher_id,name,address,email,phone_no) values(${null},'${name}','${address}','${email}','${phone_no}'`);
 
         return res.send(result);
 
