@@ -8,6 +8,7 @@ const bookRoutes = require('./routes/book');
 const memberRoutes = require('./routes/member');
 const authorRoutes = require('./routes/author');
 const issuereturnRoutes = require('./routes/issuereturn');
+const categoryRoutes = require('./routes/category')
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/book", bookRoutes);
 app.use("/author", authorRoutes);
 app.use("/issuereturn", issuereturnRoutes);
 app.use("/member", memberRoutes);
+app.use("/category", categoryRoutes);
 
 
 const PORT = process.env.PORT || 4000;
