@@ -11,20 +11,14 @@ const connectionString = {
     connectString: "localhost:1521/orclpdb"
 }
 
-// app.get('/', function (req, res) {
-//     res.send('here')
-// });
-
-//////////////
-
 let connection = undefined, result = undefined;
 
-//get /getAllAuthors
+//get /getAllCategories
 app.get('/getall', function (req, res) {
-    selectAllAuthors(req, res);
+    selectAllCategories(req, res);
 })
 
-//get /author?id=<id author>
+//get /category?id=<id category>
 app.get('/getbyid', function (req, res) {
     //get query param ?id
     let id = req.query.id;
@@ -34,48 +28,40 @@ app.get('/getbyid', function (req, res) {
         res.send('Query param id is not number')
         return
     }
-    selectAuthorsById(req, res, id);
+    selectCategoryById(req, res, id);
 })
 
 //delete single data 
 app.delete('/deletebyid/:id', (req, res) => {
-    deleteAuthorByID(req, res);
+    deleteCategoryByID(req, res);
 });
 
 //update single data
 app.put('/updatebyid/:id', (req, res) => {
     console.log(req.body, 'updatedata');
-    updateAuthor(req, res);
+    updateCategory(req, res);
 });
 
 // insertion
 app.post('/insert', (req, res) => {
     console.log(req.body, 'createData');
-    insertAuthor(req, res);
+    insertCategory(req, res);
 });
 
 
-async function selectAllAuthors(req, res) {
-
+async function selectAllCategories(req, res) {
     try {
-
         console.log('connected to database');
         connection = await oracledb.getConnection(connectionString);
 
-
-        // run query to get all books
-        result = await connection.execute(`SELECT * FROM Authors`);
+        result = await connection.execute(`SELECT * FROM Category`);
 
         if (result?.rows?.length == 0) {
-            //query return zero books
-            //return res.send('query send no rows');
             return res.status(400).json({
                 status: 'error',
                 error: 'query send no rows',
             });
         } else {
-            //send all books
-            //return res.send(result?.rows);
             return res.status(200).json({
                 status: 'succes',
                 data: result?.rows
@@ -83,12 +69,10 @@ async function selectAllAuthors(req, res) {
         }
 
     } catch (err) {
-        //send error message
         return res.send(err.message);
     } finally {
         if (connection) {
             try {
-                // Always close connections
                 await connection.close();
                 console.log('close connection success');
             } catch (err) {
@@ -99,11 +83,11 @@ async function selectAllAuthors(req, res) {
     }
 }
 
-async function selectAuthorsById(req, res, id) {
+async function selectCategoryById(req, res, id) {
     try {
         connection = await oracledb.getConnection(connectionString);
         // run query to get book with book_id
-        result = await connection.execute(`SELECT * FROM Authors where author_id=:id`, [id]);
+        result = await connection.execute(`SELECT * FROM Category where Category_id=:id`, [id]);
 
         if (result.rows.length == 0) {
             //query return zero authors
@@ -129,13 +113,13 @@ async function selectAuthorsById(req, res, id) {
     }
 }
 
-async function deleteAuthorByID(req, res) {
+async function deleteCategoryByID(req, res) {
     try {
         connection = await oracledb.getConnection(connectionString);
 
-        const author_ID = req.params.id;
+        const category_ID = req.params.id;
 
-        result = await connection.execute(`delete from authors where Author_id='${author_ID}'`);
+        result = await connection.execute(`delete from Category where Category_id='${category_ID}'`);
 
         if (result.rows.length == 0) {
             //query return zero authors
@@ -161,17 +145,16 @@ async function deleteAuthorByID(req, res) {
     }
 }
 
-async function updateAuthor(req, res) {
+async function updateCategory(req, res) {
     try {
         connection = await oracledb.getConnection(connectionString);
 
-        const author_ID = req.params.AUTHOR_ID;
-        const first_name = req.body.first_name;
-        const last_name = req.body.last_name;
-        const email = req.body.email;
+        const category_ID = req.params.id;
+        const category_name = req.body.category_name;
+        const cat_desc = req.body.cat_desc;
 
-        result = await connection.execute(`update authors set first_name='${first_name}',last_name='${last_name}',email='${email}'
-    where author_id = ${author_ID}`);
+        result = await connection.execute(`update Category set Category_name='${category_name}',Cat_desc='${cat_desc}'
+    where Category_id = ${category_ID}`);
 
         if (result.rows.length == 0) {
             //query return zero authors
@@ -197,24 +180,16 @@ async function updateAuthor(req, res) {
     }
 }
 
-async function insertAuthor(req, res) {
+async function insertCategory(req, res) {
     try {
         connection = await oracledb.getConnection(connectionString);
 
-        const author_ID = req.params.AUTHOR_ID;
-        const first_name = req.body.first_name;
-        const last_name = req.body.last_name;
-        const email = req.body.email;
+        const category_name = req.body.category_name;
+        const cat_desc = req.body.cat_desc;
 
+        result = await connection.execute(`insert into Category(Category_id,Category_name,Cat_desc) values(${null},'${category_name}','${cat_desc}'`);
 
-        result = await connection.execute(`insert into authors(author_id,first_name,last_name,email) values(${null},'${first_name}','${last_name}','${email}')`);
-        if (result.rows.length == 0) {
-            //query return zero authors
-            return res.send('query send no rows');
-        } else {
-            //send all authors
-            return res.send(result.rows);
-        }
+        return res.send("INSERTED SUCCESFULLY");
 
     } catch (err) {
         //send error message
